@@ -114,3 +114,97 @@ Train and evaluate different experiments:
 
     # Baselines
     python -m src.bas
+
+
+Each command prints accuracy, macro-F1, and a concise classification report on a stratified validation split.
+
+---
+
+## 📊 Expected Results (Guide)
+
+| Model                            | Typical Outcome* |
+|----------------------------------|-----------------:|
+| Hybrid (BoW + MPQA)             | strong baseline  |
+| BoW (unigrams / uni+bi)         | strong baseline  |
+| Dependency triples              | moderate         |
+| MPQA-only                       | modest           |
+| VADER / Naive Bayes (baselines) | baseline         |
+
+\* Reproduce locally; results depend on seed, preprocessing choices, and class mapping. Report **macro-F1** alongside accuracy due to class imbalance.
+
+---
+
+## 🧠 Implementation Notes
+
+- **Preprocessing:** lowercase; normalize URLs/mentions; optional emoji handling.  
+- **POS filter:** keep **NOUN/ADJ/VERB**; remove stopwords; **lemmatize** with WordNet.  
+- **Vectorization:** `TfidfVectorizer` with tuned `min_df`, `max_df`, `ngram_range`; consider `sublinear_tf=True`.  
+- **Classifier:** `LinearSVC` with a small grid over `C`; compare against MultinomialNB for sanity.  
+- **MPQA features:** per-tweet counts (+ optional polarity token appending for Hybrid).  
+- **Dependency features:** spaCy `en_core_web_sm` or MaltParser; hash triples like `"head_REL_dep"`.
+
+---
+
+## 📈 Evaluation & Reproducibility
+
+- **Split:** Stratified 80/20 or K-fold CV; fix a **random seed**.  
+- **Metrics:** Accuracy (headline) and **macro-F1**; include per-class precision/recall/F1.  
+- **Artifacts:** Save model + vectorizer to `artifacts/model.joblib` and `artifacts/vectorizer.joblib`.  
+- **Versions:** Lock with `python -m pip freeze > artifacts/requirements.lock`.
+
+Enable a detailed report:
+
+    python -m src.models --exp hybrid --ngrams 1 2 --report
+
+---
+
+## 🧪 Tests (Optional)
+
+    tests/
+    ├─ test_data.py
+    ├─ test_features_bow.py
+    ├─ test_features_mpqa.py
+    ├─ test_features_dep.py
+    └─ test_models.py
+
+Run tests:
+
+    pytest -q
+
+---
+
+## 🔧 Troubleshooting
+
+- **spaCy model not found:**  
+  Install: `python -m spacy download en_core_web_sm`
+- **MaltParser route:**  
+  Ensure Java is installed; add `jpype1`; configure parser path for NLTK’s interface.
+- **CSV encoding errors:**  
+  Load with `encoding="utf-8"` and `errors="ignore"` as a fallback.
+
+---
+
+## 📚 Acknowledgments
+
+- MPQA Subjectivity Lexicon  
+- VADER Sentiment  
+- spaCy & NLTK teams  
+- CrowdFlower/Data.World dataset curators
+
+---
+
+## 📝 Citation
+
+    @misc{selfdriving-tweet-sentiment,
+      title  = {Sentiment Analysis of Self-Driving Car Tweets},
+      author = {Your Name},
+      year   = {2025},
+      note   = {Course Project}
+    }
+
+---
+
+## 📄 License
+
+Released under the **MIT License**. See `LICENSE` for details.
+
