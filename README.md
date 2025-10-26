@@ -78,10 +78,6 @@ python -m spacy download en_core_web_sm
 # 6. Download the dataset CSV from data.world
 #    Place 'sentiment_self_driving_cars.csv' (or similar) into a `data/` subdirectory.
 
-# 7. (Optional) Setup MaltParser if using NLTK's interface instead of spaCy
-#    Follow MaltParser installation and NLTK integration instructions.
-
-
 ---
 
 ## 🔬 Model Details & Feature Engineering
