@@ -80,3 +80,125 @@ python -m spacy download en_core_web_sm
 
 # 7. (Optional) Setup MaltParser if using NLTK's interface instead of spaCy
 #    Follow MaltParser installation and NLTK integration instructions.
+
+
+---
+
+## 🔬 Model Details & Feature Engineering
+
+### Preprocessing Pipeline
+
+A common pipeline was applied before feature extraction for most models:
+`Raw Tweet` → `Sentence Split` → `Word Tokenize` → `POS Tag` → `Filter (Keep Noun/Adj/Verb)` → `Lemmatize` → `Processed Text String`
+
+### 1. Bag-of-Words (BoW)
+
+- **Input:** Processed Text String
+- **Vectorization:** `TfidfVectorizer` (from `scikit-learn`)
+- **N-grams Tested:** `(1, 1)`, `(1, 2)`, `(1, 3)`
+- **Classifier:** `LinearSVC`
+
+### 2. MPQA Lexicon Features
+
+- **Input:** Tokenized Tweet (before extensive filtering)
+- **Feature Extraction:** Counts occurrences of positive, negative, and neutral words using the [MPQA Subjectivity Lexicon](http://mpqa.cs.pitt.edu/lexicons/subj_lexicon/).
+- **Vectorization:** `DictVectorizer` (converts `{'pos': p, 'neg': n, 'neu': z}` counts to matrix).
+- **Classifier:** `LinearSVC`
+
+### 3. Hybrid (BoW + MPQA)
+
+- **Input:** Processed Text String + MPQA Counts
+- **Feature Engineering:** Appends string tokens (e.g., `_POS_ _POS_` if 2 positive words found) to the end of the processed text.
+- **Vectorization:** `TfidfVectorizer` on the augmented string.
+- **Classifier:** `LinearSVC`
+
+### 4. Dependency Triples
+
+- **Input:** Raw Tweet
+- **Parsing:** Uses `spaCy` (or `NLTK` + MaltParser) to generate dependency parses for each sentence.
+- **Feature Extraction:** Extracts `(head.lemma_, dep_relation, child.lemma_)` triples.
+- **Vectorization:** Converts triples to strings (e.g., `"car_nsubj_be"`) and uses `TfidfVectorizer` or `HashingVectorizer`.
+- **Classifier:** `LinearSVC`
+
+---
+
+## 🚀 Usage
+
+1.  **Run the complete pipeline** (preprocess, train all models, evaluate, and generate summary):
+    ```bash
+    python main.py --data_path data/sentiment-self-driving-cars.csv --output_dir results/
+    ```
+
+2.  **Or, run steps individually:**
+    ```bash
+    # Preprocess data
+    python src/preprocess.py --input data/sentiment-self-driving-cars.csv --output data/processed_tweets.pkl
+
+    # Train and evaluate a single model
+    python src/train.py --data data/processed_tweets.pkl --model hybrid --save_report results/hybrid_report.json
+
+    # Generate summary plots and tables from results
+    python src/visualize.py --results_dir results/ --output_dir results/
+    ```
+
+---
+
+## 📈 Results & Discussion
+
+### Performance Summary
+
+The performance of each custom model was benchmarked against Naive Bayes and the VADER sentiment library. The combined **Bag-of-Words + MPQA Lexicon** approach achieved the highest accuracy.
+
+| Model                                | Accuracy Score |
+| :----------------------------------- | :------------- |
+| **🥇 BoW + Subjectivity Lexicon** | **0.648** |
+| BoW (Unigrams only)                  | 0.637 |
+| BoW (Unigrams + Bigrams)             | 0.620 |
+| BoW (Unigrams + Bigrams + Trigrams)  | 0.610 |
+| Dependency Triples                   | 0.584 |
+| VADER (Baseline)                     | 0.569 |
+| Naive Bayes (Baseline)               | 0.550 |
+| Subjectivity Lexicon Only            | 0.549 |
+
+### Key Insights
+
+* **Hybrid is Best**: Combining traditional BoW features with explicit sentiment cues from a lexicon provided the most effective model.
+* **BoW is a Strong Performer**: A simple, well-processed Bag-of-Words model significantly outperformed both baselines, showing its strength even on noisy tweet data.
+* **More N-grams != Better**: Contrary to expectations, adding bigrams and trigrams slightly degraded performance, possibly due to overfitting on this dataset.
+* **Lexicon Alone is Insufficient**: The lexicon-only model performed the worst, likely because it couldn't handle the slang, misspellings, and novel words common in tweets.
+* **Syntax is secondary**: Dependency triples, which capture grammatical structure, were better than the baselines but less effective than the lexical BoW approaches for this task.
+
+---
+
+## 💡 Future Work
+
+While the project yielded a moderately successful model, several avenues exist for improvement:
+
+1.  **Word Embeddings**: Replace TF-IDF with pre-trained word embeddings (e.g., GloVe, Word2Vec, fastText) to capture semantic meaning.
+2.  **Transformer Models**: Fine-tune a pre-trained transformer model like `BERTweet` or `DistilBERT`, which are state-of-the-art for many NLP tasks.
+3.  **Feature Engineering**: Explicitly model features for emojis, hashtags, user mentions, negation, and sentiment shifters (e.g., "very", "hardly").
+4.  **Error Analysis**: Conduct a deep dive into misclassified examples to identify systematic model weaknesses.
+5.  **Ensemble Methods**: Combine the predictions of the best-performing models to potentially boost overall accuracy.
+
+---
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome! Feel free to check the issues page.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**. See the `LICENSE` file for details.
+
+---
+
+## 📚 References
+
+- Brownlee, J. (2019). *A gentle introduction to the bag-of-words model*. Machine Learning Mastery.
+- CrowdFlower. (2016). *Sentiment self-driving cars - dataset by Crowdflower*. data.world.
+- Hutto, C.J. & Gilbert, E.E. (2014). *VADER: A Parsimonious Rule-based Model for Sentiment Analysis of Social Media Text*. ICWSM-14.
+- Manning, C., Raghavan, P., & Schütze, H. (2008). *Introduction to Information Retrieval*. Cambridge University Press.
+- Nivre, J., Hall, J., & Nilsson, J. (2006). *Maltparser: A data-driven parser-generator for dependency parsing*. LREC.
+- Wilson, T., Wiebe, J., & Hoffmann, P. (2005). *Recognizing Contextual Polarity in Phrase-Level Sentiment Analysis*. HLT-EMNLP-2005.
