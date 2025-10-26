@@ -51,35 +51,6 @@ This repository implements and evaluates four sentiment-classification strategie
 
 ---
 
-## 📦 Installation
-
-Create and activate a virtual environment, then install dependencies:
-
-```bash
-# 1. Clone the repository
-git clone <your-repo-url>
-cd <your-repo-directory>
-
-# 2. Create and activate virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-
-# 3. Install required packages
-pip install -r requirements.txt
-# (Ensure requirements.txt includes: scikit-learn nltk pandas numpy matplotlib tqdm vaderSentiment spacy)
-# Or manually: pip install scikit-learn nltk pandas numpy matplotlib tqdm vaderSentiment spacy
-
-# 4. Download necessary NLTK data
-python -c "import nltk; nltk.download('punkt'); nltk.download('averaged_perceptron_tagger'); nltk.download('wordnet'); nltk.download('omw-1.4')"
-
-# 5. Download spaCy model (if using spaCy for parsing)
-python -m spacy download en_core_web_sm
-
-# 6. Download the dataset CSV from data.world
-#    Place 'sentiment_self_driving_cars.csv' (or similar) into a `data/` subdirectory.
-
----
-
 ## 🔬 Model Details & Feature Engineering
 
 ### Preprocessing Pipeline
